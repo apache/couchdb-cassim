@@ -41,7 +41,8 @@
 
 
 security_meta_id(DbName) ->
-    <<DbName/binary, "/_security">>.
+    Suffix = list_to_binary(mem3:shard_suffix(DbName)),
+    <<DbName/binary, Suffix/binary, "/_security">>.
 
 
 get_security(DbName) ->
