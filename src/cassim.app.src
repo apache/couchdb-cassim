@@ -21,7 +21,8 @@
         stdlib,
         config,
         couch,
-        mem3
+        mem3,
+        couch_log
     ]},
     {mod, {cassim_app, []}},
     {env, []}
