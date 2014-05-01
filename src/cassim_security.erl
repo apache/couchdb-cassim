@@ -28,7 +28,6 @@
 ]).
 
 -export([
-    security_meta_id/1,
     validate_security_doc/1
 ]).
 
@@ -38,11 +37,6 @@
 
 -define(ADMIN_USER, #user_ctx{roles = [<<"_admin">>]}).
 -define(ADMIN_CTX, {user_ctx, ?ADMIN_USER}).
-
-
-security_meta_id(DbName) ->
-    Suffix = list_to_binary(mem3:shard_suffix(DbName)),
-    <<DbName/binary, Suffix/binary, "/_security">>.
 
 
 get_security(DbName) ->
@@ -66,7 +60,7 @@ get_security(DbName, Options) ->
 
 get_security_doc(DbName0) when is_binary(DbName0) ->
     DbName = mem3:dbname(DbName0),
-    MetaId = security_meta_id(DbName),
+    MetaId = cassim_metadata_cache:security_meta_id(DbName),
     case cassim_metadata_cache:load_meta(MetaId) of
         undefined ->
             SecProps = fabric:get_security(DbName),
@@ -85,7 +79,7 @@ set_security(#db{name=DbName0}=Db, #doc{body=SecProps}=SecDoc0, Options) ->
     case cassim_metadata_cache:metadata_db_exists() of
         true ->
             DbName = mem3:dbname(DbName0),
-            MetaId = security_meta_id(DbName),
+            MetaId = cassim_metadata_cache:security_meta_id(DbName),
             SecDoc = SecDoc0#doc{id=MetaId},
             UserCtx = couch_util:get_value(user_ctx, Options, #user_ctx{}),
             MetaDbName = cassim_metadata_cache:metadata_db(),
@@ -95,6 +89,7 @@ set_security(#db{name=DbName0}=Db, #doc{body=SecProps}=SecDoc0, Options) ->
             {Status, Etag, {Body0}} =
                 chttpd_db:update_doc(MetaDb, MetaId, SecDoc, Options),
             Body = {proplists:delete(<<"_id">>, Body0)},
+            ok = cassim_metadata_cache:cleanup_old_docs(MetaId),
             {Status, Etag, Body};
         false ->
             fabric:set_security(Db, SecProps, Options)
@@ -103,7 +98,7 @@ set_security(#db{name=DbName0}=Db, #doc{body=SecProps}=SecDoc0, Options) ->
 
 migrate_security_props(DbName0, {SecProps}) ->
     DbName = mem3:dbname(DbName0),
-    MetaId = security_meta_id(DbName),
+    MetaId = cassim_metadata_cache:security_meta_id(DbName),
     SecDoc = #doc{id=MetaId, body={SecProps}},
     MetaDbName = cassim_metadata_cache:metadata_db(),
     MetaDb = #db{name=MetaDbName, user_ctx=?ADMIN_USER},

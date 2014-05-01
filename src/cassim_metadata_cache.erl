@@ -34,7 +34,12 @@
     load_meta/2,
     load_meta/3,
     metadata_db/0,
-    metadata_db_exists/0
+    metadata_db_exists/0,
+    cleanup_old_docs/1
+]).
+
+-export([
+    security_meta_id/1
 ]).
 
 
@@ -63,6 +68,11 @@ metadata_db_exists() ->
     catch error:database_does_not_exist ->
         false
     end.
+
+
+security_meta_id(DbName) ->
+    Suffix = list_to_binary(mem3:shard_suffix(DbName)),
+    <<DbName/binary, "/_security", Suffix/binary>>.
 
 
 start_link() ->
@@ -212,3 +222,44 @@ fetch_cached_meta(MetaId) ->
             couch_log:notice("cache miss on metadata ~s", [MetaId]),
             undefined
     end.
+
+
+cleanup_old_docs(MetaId) ->
+    MetaGroupId = filename:rootname(binary_to_list(MetaId)),
+    {ok, {_MetaId, Docs}} = fabric:all_docs(
+        metadata_db(),
+        fun cleanup_old_docs_callback/2,
+        {MetaId, []},
+        [
+            {start_key, list_to_binary(MetaGroupId)},
+            {end_key, list_to_binary(MetaGroupId ++ "Z")},
+            {include_docs, true}
+        ]
+    ),
+    {ok, _Revs} = delete_meta_docs(Docs),
+    ok.
+
+
+cleanup_old_docs_callback({total_and_offset, _Total, _Offset}, {MetaId, Acc}) ->
+    {ok, {MetaId, Acc}};
+cleanup_old_docs_callback({row, {Row}}, {MetaId, Acc}) ->
+    Id = couch_util:get_value(id, Row),
+    case MetaId == Id of
+        true ->
+            {ok, {MetaId, Acc}};
+        false ->
+            Doc = couch_doc:from_json_obj(couch_util:get_value(doc, Row)),
+            {ok, {MetaId, [Doc|Acc]}}
+    end;
+cleanup_old_docs_callback(complete, {MetaId, Acc}) ->
+    {ok, {MetaId, Acc}};
+cleanup_old_docs_callback({error, Reason}, {MetaId, Acc}) ->
+    couch_log:error("Unable clean up all old docs on ~p: ~p", [MetaId, Reason]),
+    {ok, {MetaId, Acc}}.
+
+
+delete_meta_docs(Docs0) ->
+    Docs = [D#doc{deleted=true, body={[]}} || D <- Docs0],
+    Options = [{user_ctx, #user_ctx{roles=[<<"_admin">>]}}],
+    DbName = metadata_db(),
+    fabric:update_docs(DbName, Docs, Options).
