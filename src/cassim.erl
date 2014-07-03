@@ -16,6 +16,10 @@
 
 
 -export([
+    is_enabled/0
+]).
+
+-export([
     is_server_admin/1,
     verify_is_admin/1,
     verify_is_server_admin/1
@@ -35,6 +39,10 @@
 
 
 -include_lib("couch/include/couch_db.hrl").
+
+
+is_enabled() ->
+    cassim_metadata_cache:metadata_db_exists().
 
 
 verify_is_admin(#httpd{}=Req) ->
