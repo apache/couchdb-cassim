@@ -75,25 +75,20 @@ set_security(DbName, SecProps) ->
     set_security(DbName, SecProps, [?ADMIN_CTX]).
 
 
-set_security(#db{name=DbName0}=Db, #doc{body=SecProps}=SecDoc0, Options) ->
-    case cassim_metadata_cache:metadata_db_exists() of
-        true ->
-            DbName = mem3:dbname(DbName0),
-            MetaId = cassim_metadata_cache:security_meta_id(DbName),
-            SecDoc = SecDoc0#doc{id=MetaId},
-            UserCtx = couch_util:get_value(user_ctx, Options, #user_ctx{}),
-            MetaDbName = cassim_metadata_cache:metadata_db(),
-            MetaDb = #db{name=MetaDbName, user_ctx=?ADMIN_USER},
-            cassim:verify_admin_role(UserCtx),
-            ok = validate_security_doc(SecDoc),
-            {Status, Etag, {Body0}} =
-                chttpd_db:update_doc(MetaDb, MetaId, SecDoc, Options),
-            Body = {proplists:delete(<<"_id">>, Body0)},
-            ok = cassim_metadata_cache:cleanup_old_docs(MetaId),
-            {Status, Etag, Body};
-        false ->
-            fabric:set_security(Db, SecProps, Options)
-    end.
+set_security(#db{name=DbName0}, #doc{}=SecDoc0, Options) ->
+    DbName = mem3:dbname(DbName0),
+    MetaId = cassim_metadata_cache:security_meta_id(DbName),
+    SecDoc = SecDoc0#doc{id=MetaId},
+    UserCtx = couch_util:get_value(user_ctx, Options, #user_ctx{}),
+    MetaDbName = cassim_metadata_cache:metadata_db(),
+    MetaDb = #db{name=MetaDbName, user_ctx=?ADMIN_USER},
+    cassim:verify_admin_role(UserCtx),
+    ok = validate_security_doc(SecDoc),
+    {Status, Etag, {Body0}} =
+        chttpd_db:update_doc(MetaDb, MetaId, SecDoc, Options),
+    Body = {proplists:delete(<<"_id">>, Body0)},
+    ok = cassim_metadata_cache:cleanup_old_docs(MetaId),
+    {Status, Etag, Body}.
 
 
 migrate_security_props(DbName0, {SecProps}) ->
