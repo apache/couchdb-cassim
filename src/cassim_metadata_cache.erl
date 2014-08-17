@@ -162,7 +162,7 @@ changes_callback({change, {Change}}, _) ->
         false ->
             case couch_util:get_value(doc, Change) of
                 {error, Reason} ->
-                    couch_log:warn(
+                    couch_log:warning(
                         "could not retrieve metadata doc ~s: ~p", [Id, Reason]);
                 Props ->
                     gen_server:cast(?MODULE, {insert_cached_meta, {Id, Props}})
@@ -185,7 +185,7 @@ load_meta_from_db(DbName, MetaId) ->
         {ok, Doc} ->
             couch_doc:to_json_obj(Doc, []);
         _Else ->
-            couch_log:warn("no record of meta ~s", [MetaId]),
+            couch_log:warning("no record of meta ~s", [MetaId]),
             undefined
     catch error:database_does_not_exist ->
         undefined
