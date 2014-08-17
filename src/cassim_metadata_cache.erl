@@ -125,6 +125,8 @@ handle_info(_Msg, State) ->
     {noreply, State}.
 
 
+terminate(_Reason, #st{changes_pid = undefined}) ->
+    ok;
 terminate(_Reason, #st{changes_pid = Pid}) ->
     exit(Pid, kill),
     ok.
