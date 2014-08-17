@@ -240,9 +240,9 @@ cleanup_old_docs(MetaId) ->
     ok.
 
 
-cleanup_old_docs_callback({total_and_offset, _Total, _Offset}, {MetaId, Acc}) ->
+cleanup_old_docs_callback({meta, _}, {MetaId, Acc}) ->
     {ok, {MetaId, Acc}};
-cleanup_old_docs_callback({row, {Row}}, {MetaId, Acc}) ->
+cleanup_old_docs_callback({row, Row}, {MetaId, Acc}) ->
     Id = couch_util:get_value(id, Row),
     case MetaId == Id of
         true ->
