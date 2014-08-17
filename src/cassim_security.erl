@@ -110,8 +110,6 @@ validate_security_doc(#doc{body={SecProps}}) ->
         couch_util:get_value(<<"readers">>, SecProps, {[]})),
     ok = validate_names_and_roles(Admins),
     ok = validate_names_and_roles(Members),
-    Users = couch_util:get_value(<<"cloudant">>, SecProps, {[]}),
-    ok = validate_cloudant_roles(Users),
     ok.
 
 
@@ -122,12 +120,6 @@ validate_names_and_roles({Props}) when is_list(Props) ->
         end,
         [<<"names">>, <<"roles">>]
     ).
-
-
-validate_cloudant_roles({Props}) when is_list(Props) ->
-    lists:foreach(fun({U, R}) -> validate_roles_list(U, R) end, Props);
-validate_cloudant_roles(_) ->
-    throw("Cloudant field must be a set of name roles list pairs").
 
 
 validate_roles_list(Field, Roles) when is_list(Roles) ->
