@@ -163,7 +163,9 @@ check_is_member(#user_ctx{name=Name,roles=Roles}=UserCtx, SecProps) ->
             WithAdminRoles -> % same list, not an reader role
                 case ReaderNames -- [Name] of
                 ReaderNames -> % same names, not a reader
-                    ?LOG_DEBUG("Not a reader: UserCtx ~p vs Names ~p Roles ~p",[UserCtx, ReaderNames, WithAdminRoles]),
+                    couch_log:debug("Not a reader: UserCtx ~p "
+                                    " vs Names ~p Roles ~p",
+                                    [UserCtx, ReaderNames, WithAdminRoles]),
                     throw({unauthorized, <<"You are not authorized to access this db.">>});
                 _ ->
                     ok
