@@ -46,7 +46,7 @@ get_security(DbName, Options) ->
             UserCtx = couch_util:get_value(user_ctx, Options, #user_ctx{}),
             Doc = get_security_doc(DbName),
             {SecProps} = couch_doc:to_json_obj(Doc, []),
-            check_is_member(UserCtx, SecProps),
+            ok = check_is_member(UserCtx, SecProps),
             {proplists:delete(<<"_id">>, SecProps)};
         false ->
             fabric:get_security(DbName, Options)
@@ -148,57 +148,9 @@ validate_roles_list(Field, _Roles) ->
     throw(binary_to_list(Field) ++ " must be a JSON list of strings").
 
 
-check_is_admin(#user_ctx{name=Name,roles=Roles}, SecProps) ->
-    {Admins} = get_admins(SecProps),
-    AdminRoles = [<<"_admin">> | couch_util:get_value(<<"roles">>, Admins, [])],
-    AdminNames = couch_util:get_value(<<"names">>, Admins,[]),
-    case AdminRoles -- Roles of
-    AdminRoles -> % same list, not an admin role
-        case AdminNames -- [Name] of
-        AdminNames -> % same names, not an admin
-            throw({unauthorized, <<"You are not a db or server admin.">>});
-        _ ->
-            ok
-        end;
-    _ ->
-        ok
-    end.
-
-
-check_is_member(#user_ctx{name=Name,roles=Roles}=UserCtx, SecProps) ->
-    case (catch check_is_admin(UserCtx, SecProps)) of
-    ok -> ok;
-    _ ->
-        {Members} = get_members(SecProps),
-        ReaderRoles = couch_util:get_value(<<"roles">>, Members,[]),
-        WithAdminRoles = [<<"_admin">> | ReaderRoles],
-        ReaderNames = couch_util:get_value(<<"names">>, Members,[]),
-        case ReaderRoles ++ ReaderNames of
-        [] -> ok; % no readers == public access
-        _Else ->
-            case WithAdminRoles -- Roles of
-            WithAdminRoles -> % same list, not an reader role
-                case ReaderNames -- [Name] of
-                ReaderNames -> % same names, not a reader
-                    couch_log:debug("Not a reader: UserCtx ~p "
-                                    " vs Names ~p Roles ~p",
-                                    [UserCtx, ReaderNames, WithAdminRoles]),
-                    throw({unauthorized, <<"You are not authorized to access this db.">>});
-                _ ->
-                    ok
-                end;
-            _ ->
-                ok
-            end
-        end
-    end.
-
-
-get_admins(SecProps) ->
-    couch_util:get_value(<<"admins">>, SecProps, {[]}).
-
-
-get_members(SecProps) ->
-    % we fallback to readers here for backwards compatibility
-    couch_util:get_value(<<"members">>, SecProps,
-        couch_util:get_value(<<"readers">>, SecProps, {[]})).
+check_is_member(UserCtx, SecProps) ->
+    FakeDb = #db{
+        security = SecProps,
+        user_ctx = UserCtx
+    },
+    couch_db:check_is_member(FakeDb).
