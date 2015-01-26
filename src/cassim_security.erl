@@ -33,10 +33,6 @@
 -include_lib("couch/include/couch_db.hrl").
 
 
--define(ADMIN_USER, #user_ctx{roles = [<<"_admin">>]}).
--define(ADMIN_CTX, {user_ctx, ?ADMIN_USER}).
-
-
 get_security(DbName) ->
     get_security(DbName, [?ADMIN_CTX]).
 

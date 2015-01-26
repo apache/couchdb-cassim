@@ -260,6 +260,5 @@ cleanup_old_docs_callback({error, Reason}, {MetaId, Acc}) ->
 
 delete_meta_docs(Docs0) ->
     Docs = [D#doc{deleted=true, body={[]}} || D <- Docs0],
-    Options = [{user_ctx, #user_ctx{roles=[<<"_admin">>]}}],
     DbName = metadata_db(),
-    fabric:update_docs(DbName, Docs, Options).
+    fabric:update_docs(DbName, Docs, [?ADMIN_CTX]).
