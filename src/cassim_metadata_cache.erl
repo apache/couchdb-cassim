@@ -56,7 +56,7 @@
 
 
 metadata_db() ->
-    config:get("couchdb", "metadata_db", "_cassim").
+    config:get("couchdb", "metadata_db", "_metadata").
 
 
 metadata_db_exists() ->
