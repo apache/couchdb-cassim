@@ -70,7 +70,7 @@ metadata_db_exists() ->
 
 security_meta_id(DbName) ->
     Suffix = list_to_binary(mem3:shard_suffix(DbName)),
-    <<DbName/binary, "/_security", Suffix/binary>>.
+    <<"db/", DbName/binary, "/_security", Suffix/binary>>.
 
 
 start_link() ->
