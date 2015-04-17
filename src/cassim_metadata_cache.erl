@@ -40,6 +40,10 @@
     security_meta_id/1
 ]).
 
+-export([
+    cache_timeout/0
+]).
+
 
 -record(st, {
     changes_pid,
@@ -57,6 +61,13 @@
 
 metadata_db() ->
     config:get("couchdb", "metadata_db", "_metadata").
+
+
+cache_timeout() ->
+    case config:get("cassim", "cache_timeout", "5000") of
+        "infinity" -> infinity;
+        N -> list_to_integer(N)
+    end.
 
 
 metadata_db_exists() ->
@@ -181,15 +192,21 @@ changes_callback({error, _}, EndSeq) ->
 
 
 load_meta_from_db(DbName, MetaId) ->
-    try fabric:open_doc(DbName, MetaId, []) of
-        {ok, Doc} ->
+    Args = [DbName, MetaId, []],
+    Timeout = cache_timeout(),
+    case couch_util:with_proc(fabric, open_doc, Args, Timeout) of
+        {ok, {ok, Doc}} ->
             couch_doc:to_json_obj(Doc, []);
-        _Else ->
-            couch_log:warning("no record of meta ~s", [MetaId]),
-            undefined
-    catch error:database_does_not_exist ->
-        undefined
-    end.
+        {ok, {not_found, missing}} ->
+            undefined;
+        {error, {database_does_not_exist, _}} ->
+            undefined;
+        {error, timeout} ->
+            couch_log:notice("timeout retrieving metadata doc ~s", [MetaId]),
+            {error, timeout};
+        {error, Error} ->
+            {error, Error}
+     end.
 
 
 load_meta(MetaId) ->

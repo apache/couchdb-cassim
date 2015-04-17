@@ -60,6 +60,8 @@ get_security_doc(DbName0) when is_binary(DbName0) ->
             SecProps = fabric:get_security(DbName),
             {ok, SecDoc} = migrate_security_props(DbName, SecProps),
             SecDoc;
+        {error, Error} ->
+            throw(Error);
         SecProps ->
             couch_doc:from_json_obj(SecProps)
     end.
