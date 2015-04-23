@@ -195,17 +195,25 @@ load_meta_from_db(DbName, MetaId) ->
     Args = [DbName, MetaId, []],
     Timeout = cache_timeout(),
     case couch_util:with_proc(fabric, open_doc, Args, Timeout) of
-        {ok, {ok, Doc}} ->
+        {ok, {ok, #doc{}=Doc}} ->
             couch_doc:to_json_obj(Doc, []);
+        {ok, {not_found, deleted}} ->
+            deleted;
         {ok, {not_found, missing}} ->
             undefined;
         {error, {database_does_not_exist, _}} ->
             undefined;
         {error, timeout} ->
-            couch_log:notice("timeout retrieving metadata doc ~s", [MetaId]),
+            couch_log:notice(
+                "timeout retrieving metadata doc [~s/]~s",
+                [DbName, MetaId]
+            ),
             {error, timeout};
-        {error, Error} ->
-            {error, Error}
+        Resp ->
+            couch_log:notice(
+                "unexpected response retrieving metadata doc [~s/]~s: ~s",
+                [DbName, MetaId, Resp]),
+            {error, Resp}
      end.
 
 
