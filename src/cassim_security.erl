@@ -52,14 +52,28 @@ get_security(DbName, Options) ->
     end.
 
 
-get_security_doc(DbName0) when is_binary(DbName0) ->
+get_security_doc(DbName) when is_binary(DbName) ->
+    RetryCnt = config:get_integer("cassim", "get_security_retries", 3),
+    get_security_doc(DbName, RetryCnt).
+
+
+get_security_doc(DbName, RetryCnt) when RetryCnt =< 0 ->
+    couch_log:error(
+        "Exhausted retry limit loading security doc for db ~s", [DbName]
+    ),
+    throw({retries_limit_exhaused, "Exhaused security doc retry limit"});
+get_security_doc(DbName0, RetryCnt) ->
     DbName = mem3:dbname(DbName0),
     MetaId = cassim_metadata_cache:security_meta_id(DbName),
     case cassim_metadata_cache:load_meta(MetaId) of
         undefined ->
             SecProps = fabric:get_security(DbName),
-            {ok, SecDoc} = migrate_security_props(DbName, SecProps),
-            SecDoc;
+            try migrate_security_props(DbName, SecProps) of
+                {ok, SecDoc} ->
+                    SecDoc
+            catch conflict ->
+                get_security_doc(DbName0, RetryCnt-1)
+            end;
         {error, Error} ->
             throw(Error);
         SecProps ->
