@@ -26,6 +26,7 @@
 ]).
 
 -export([
+    migrate_security_props/2,
     validate_security_doc/1
 ]).
 
