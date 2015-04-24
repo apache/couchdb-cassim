@@ -198,7 +198,7 @@ load_meta_from_db(DbName, MetaId) ->
         {ok, {ok, #doc{}=Doc}} ->
             couch_doc:to_json_obj(Doc, []);
         {ok, {not_found, deleted}} ->
-            deleted;
+            undefined;
         {ok, {not_found, missing}} ->
             undefined;
         {error, {database_does_not_exist, _}} ->
