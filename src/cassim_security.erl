@@ -41,7 +41,7 @@ get_security(DbName) ->
 get_security(#db{name=DbName}, Options) ->
     get_security(DbName, Options);
 get_security(DbName, Options) ->
-    case cassim:is_enabled() of
+    case cassim:is_active() of
         true ->
             UserCtx = couch_util:get_value(user_ctx, Options, #user_ctx{}),
             Doc = get_security_doc(DbName),

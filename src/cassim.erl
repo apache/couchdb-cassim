@@ -14,7 +14,9 @@
 
 
 -export([
-    is_enabled/0
+    is_enabled/0,
+    is_active/0,
+    metadata_db_exists/0
 ]).
 
 -export([
@@ -39,7 +41,15 @@
 -include_lib("couch/include/couch_db.hrl").
 
 
+is_active() ->
+    is_enabled() andalso metadata_db_exists().
+
+
 is_enabled() ->
+    config:get_boolean("cassim", "enable", false).
+
+
+metadata_db_exists() ->
     cassim_metadata_cache:metadata_db_exists().
 
 
