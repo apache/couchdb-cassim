@@ -240,11 +240,14 @@ load_meta(MetaId, _UseCache=false, Db) ->
 fetch_cached_meta(MetaId) ->
     try ets:lookup(?META_TABLE, MetaId) of
         [{MetaId, Props}] ->
+            couch_stats:increment_counter([cassim, metadata_cache, hit]),
             Props;
         [] ->
+            couch_stats:increment_counter([cassim, metadata_cache, miss]),
             couch_log:notice("cache miss on metadata ~s", [MetaId]),
             undefined
         catch error:badarg ->
+            couch_stats:increment_counter([cassim, metadata_cache, miss]),
             couch_log:notice("cache miss on metadata ~s", [MetaId]),
             undefined
     end.
