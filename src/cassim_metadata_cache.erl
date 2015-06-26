@@ -31,6 +31,7 @@
     load_meta/1,
     load_meta/2,
     load_meta/3,
+    fetch_cached_meta/1,
     metadata_db/0,
     metadata_db_exists/0,
     cleanup_old_docs/1
@@ -211,7 +212,7 @@ load_meta_from_db(DbName, MetaId) ->
             {error, timeout};
         Resp ->
             couch_log:notice(
-                "unexpected response retrieving metadata doc [~s/]~s: ~s",
+                "unexpected response retrieving metadata doc [~s/]~s: ~p",
                 [DbName, MetaId, Resp]),
             {error, Resp}
      end.
