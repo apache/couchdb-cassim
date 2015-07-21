@@ -14,7 +14,9 @@
 
 
 -export([
-    is_enabled/0
+    is_enabled/0,
+    is_active/0,
+    metadata_db_exists/0
 ]).
 
 -export([
@@ -35,11 +37,24 @@
     set_security/3
 ]).
 
+-export([
+    migrate_database/1,
+    migrate_databases/0
+]).
+
 
 -include_lib("couch/include/couch_db.hrl").
 
 
+is_active() ->
+    is_enabled() andalso metadata_db_exists().
+
+
 is_enabled() ->
+    config:get_boolean("cassim", "enable", false).
+
+
+metadata_db_exists() ->
     cassim_metadata_cache:metadata_db_exists().
 
 
@@ -85,3 +100,31 @@ set_security(DbName, SecObj) ->
 
 set_security(DbName, SecObj, Options) ->
     cassim_security:set_security(DbName, SecObj, Options).
+
+
+migrate_databases() ->
+    {ok, Dbs} = fabric:all_dbs(),
+    lists:foldl(
+        fun(DbName, Errors) ->
+            try
+                MetaId = cassim_metadata_cache:security_meta_id(DbName),
+                case cassim_metadata_cache:fetch_cached_meta(MetaId) of
+                    undefined ->
+                        ok = migrate_database(DbName);
+                    _ ->
+                        ok
+                end,
+                Errors
+            catch Error:Reason ->
+                [{DbName, Error, Reason} | Errors]
+            end
+        end,
+        [],
+        Dbs
+    ).
+
+
+migrate_database(DbName) ->
+    SecProps = fabric:get_security(DbName),
+    {ok, _Props} = cassim_security:migrate_security_props(DbName, SecProps),
+    ok.
