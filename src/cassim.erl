@@ -51,7 +51,7 @@ is_active() ->
 
 
 is_enabled() ->
-    config:get_boolean("cassim", "enable", false).
+    config:get_boolean("cassim", "enable", true).
 
 
 metadata_db_exists() ->
