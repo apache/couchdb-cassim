@@ -184,7 +184,7 @@ changes_callback({change, {Change}}, _) ->
     end,
     {ok, couch_util:get_value(seq, Change)};
 changes_callback(timeout, EndSeq) ->
-    exit({seq, EndSeq});
+    {ok, EndSeq};
 changes_callback({error, database_does_not_exist}, _EndSeq) ->
     exit({error, database_does_not_exist});
 changes_callback({error, _}, EndSeq) ->
