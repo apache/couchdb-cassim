@@ -166,7 +166,7 @@ changes_callback(waiting_for_updates, Acc) ->
     {ok, Acc};
 changes_callback(start, Since) ->
     {ok, Since};
-changes_callback({stop, EndSeq}, _) ->
+changes_callback({stop, EndSeq, _Pending}, _) ->
     exit({seq, EndSeq});
 changes_callback({change, {Change}}, _) ->
     Id = couch_util:get_value(id, Change),
