@@ -59,5 +59,6 @@ Note: this is not yet used in CouchDB 2.x yet, but is planned to land in the fut
 [22:45:24]  <+jan____>		    like at all
 [22:46:12]  <chewbranca>	    that's my general opinion on it, but I know rnewson (and maybe davisp) have had some reservations about removing that in the past, but given that's exactly what Cloudant does there's at the very least precedent for this being a reasonable approach
 [22:46:34]  <+jan____>		    is_member code looks fairly portable to chttpd: https://github.com/apache/couchdb/blob/1deeac0adbc39546d7061ab2cb6847cb425f615b/src/couch/src/couch_db.erl#L428-L452
+[22:47:40]  <chewbranca>	    jan____: fwiw there's already most of that logic in https://github.com/apache/couchdb/blob/master/src/chttpd/src/chttpd_auth_request.erl#L94-L126
 
 ```
