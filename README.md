@@ -1,7 +1,12 @@
-cassim
-======
+# Cassim
 
-Open Sesame
+*Open Sesame!*
+
+Cassim is responsible for storing security information for clustered databases 
+in a clustered database (``cassim``). This information is then heavily cached 
+for reference at runtime.
+
+Note: this is not yet used in CouchDB 2.x yet, but is planned to land in the future.
 
 # TODO
 
