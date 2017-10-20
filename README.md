@@ -16,6 +16,7 @@ Note: this is not yet used in CouchDB 2.x yet, but is planned to land in the fut
 
 # Notes
 
+```
 [22:12:49]  <+jan____>	chewbranca: davisp: what’s the state of cassim at Cloudant?
 [22:13:12]  <chewbranca>	    heh... fabric:get_security is terrible and cassim would be a great replacement for it
 [22:13:32]  <chewbranca>	    well, at least for the primary case of caching the data, you still need fabric:get_security behind cassim 
@@ -46,5 +47,4 @@ Note: this is not yet used in CouchDB 2.x yet, but is planned to land in the fut
 [22:30:58]  <chewbranca>	    jan____: yeah that's exactly what the Cloudant security does, there's just a different implementation of https://github.com/apache/couchdb/blob/master/src/chttpd/src/chttpd_auth.erl#L44-L45
 [22:32:04]  <+jan____>		    chewbranca: right, I mean, how hard would it be to lift couchdb security up into chttpd? 
 [22:33:14]  <chewbranca>	    not hard at all, the plumbing is already there, the bigger issue is what to do about roles and what not, which _could_ be done orthogonally, but needs to be done at some point 
-
-
+```
