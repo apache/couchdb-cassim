@@ -10,5 +10,5 @@ Note: this is not yet used in CouchDB 2.x yet, but is planned to land in the fut
 
 # TODO
 
-- [] Fix Security objects cannot be synced if nodes are in maintenance mode https://github.com/apache/couchdb/issues/602
-- [] Merge into couchdb.git repo.
+- [ ] Fix Security objects cannot be synced if nodes are in maintenance mode https://github.com/apache/couchdb/issues/602
+- [ ] Merge into couchdb.git repo.
