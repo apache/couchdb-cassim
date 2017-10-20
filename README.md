@@ -47,4 +47,17 @@ Note: this is not yet used in CouchDB 2.x yet, but is planned to land in the fut
 [22:30:58]  <chewbranca>	    jan____: yeah that's exactly what the Cloudant security does, there's just a different implementation of https://github.com/apache/couchdb/blob/master/src/chttpd/src/chttpd_auth.erl#L44-L45
 [22:32:04]  <+jan____>		    chewbranca: right, I mean, how hard would it be to lift couchdb security up into chttpd? 
 [22:33:14]  <chewbranca>	    not hard at all, the plumbing is already there, the bigger issue is what to do about roles and what not, which _could_ be done orthogonally, but needs to be done at some point 
+[22:36:31]  <chewbranca>	    huh... looks like it's even further along than I thought, it's basically just this but with more role checks and what not: https://github.com/apache/couchdb/blob/1deeac0adbc39546d7061ab2cb6847cb425f615b/src/chttpd/src/chttpd_auth_request.erl
+[22:39:48]  <chewbranca>	    but yeah, the main difference is that on the shard level there's an extra security check here: https://github.com/apache/couchdb/blob/1deeac0adbc39546d7061ab2cb6847cb425f615b/src/couch/src/couch_db.erl#L94
+[22:40:21]  <chewbranca>	    in the past Cloudant's auth model only has relevant values there for checking CouchDB style security, so Cloudant style security would skip that entirely 
+[22:42:26]  <+jan____>		    chewbranca: so you’re saying by the time we’re hitting couch_db:open(), we should already know that the user doing this is allowed to do it?
+[22:44:00]  <chewbranca>	    jan____: well kind of. What I'm saying is that Cloudant's security model does exactly that, and _only_ does the auth checks in chttpd, whereas the CouchDB security model does the additional check in couch_db:open, and it's that extra check in couch_db:open that causes the chicken and egg scenario of needing to load security properties on a clustered database while interacting with a local shard 
+[22:44:12]  <chewbranca>	    for instance, think about what would happen if you do couch_db:open(cassim)
+[22:44:31]  <chewbranca>	    you need to then open the cassim db to determine if you have access to the cassim db ;-)
+[22:45:01]  <chewbranca>	    so cassim works in the clustered case, but is awkward for multiple reasons in the unclustered case 
+[22:45:08]  <+jan____>		    chewbranca: so yeah, I think that check should not be in couch_db:open
+[22:45:24]  <+jan____>		    like at all
+[22:46:12]  <chewbranca>	    that's my general opinion on it, but I know rnewson (and maybe davisp) have had some reservations about removing that in the past, but given that's exactly what Cloudant does there's at the very least precedent for this being a reasonable approach
+[22:46:34]  <+jan____>		    is_member code looks fairly portable to chttpd: https://github.com/apache/couchdb/blob/1deeac0adbc39546d7061ab2cb6847cb425f615b/src/couch/src/couch_db.erl#L428-L452
+
 ```
