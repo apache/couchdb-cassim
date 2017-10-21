@@ -60,5 +60,9 @@ Note: this is not yet used in CouchDB 2.x yet, but is planned to land in the fut
 [22:46:12]  <chewbranca>	    that's my general opinion on it, but I know rnewson (and maybe davisp) have had some reservations about removing that in the past, but given that's exactly what Cloudant does there's at the very least precedent for this being a reasonable approach
 [22:46:34]  <+jan____>		    is_member code looks fairly portable to chttpd: https://github.com/apache/couchdb/blob/1deeac0adbc39546d7061ab2cb6847cb425f615b/src/couch/src/couch_db.erl#L428-L452
 [22:47:40]  <chewbranca>	    jan____: fwiw there's already most of that logic in https://github.com/apache/couchdb/blob/master/src/chttpd/src/chttpd_auth_request.erl#L94-L126
+[23:06:12]  <+rnewson>		    once chttpd is the only path, we should pull up the couch_db security checks
+[23:06:18]  <+rnewson>		    should be in the fabric layer only imo
+[23:07:53]  <chewbranca>	    rnewson: ok cool, glad to hear. I seemed to remember you expressing concerns about it in the past. I completely agree though and the awkwardness of not going through chttpd was concerning as well 
+[23:08:34]  <chewbranca>	    the chttpd authentication goes through couch_httpd_auth, the chttpd authorization goes through chttpd_auth_request
 
 ```
